@@ -231,8 +231,15 @@ public sealed partial class Cpu
             return 4;
         }
 
-        byte value = ReadR8(z, mode);
-        WriteR8(y, mode, value);
+        // When one side of the move is the (HL)/(IX+d)/(IY+d) memory operand (register
+        // code 6), the OTHER side's H/L is the real H/L register, not IXH/IXL/IYH/IYL —
+        // e.g. DD 66 d (LD H,(IX+d)) loads the real H. Only a pure register-to-register
+        // move (neither side is code 6) redirects H/L to the indexed half-registers.
+        IndexMode srcMode = y == 6 ? IndexMode.None : mode;
+        IndexMode dstMode = z == 6 ? IndexMode.None : mode;
+
+        byte value = ReadR8(z, srcMode);
+        WriteR8(y, dstMode, value);
         if (z == 6 || y == 6) return mode == IndexMode.None ? 7 : 19;
         return 4;
     }

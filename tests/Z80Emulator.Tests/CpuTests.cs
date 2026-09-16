@@ -204,6 +204,38 @@ public class CpuTests
     }
 
     [Fact]
+    public void LoadHFromIndexedMemory_UsesRealHNotIxh()
+    {
+        // LD IX,0x0010 ; LD (IX+2),0x42 ; LD H,(IX+2) -- must set real H, not IXH.
+        var (cpu, _) = NewCpu(0xDD, 0x21, 0x10, 0x00, 0xDD, 0x36, 0x02, 0x42, 0xDD, 0x66, 0x02);
+        Run(cpu, 3);
+        Assert.Equal(0x42, cpu.H);
+        Assert.Equal(0x00, cpu.IX >> 8);
+    }
+
+    [Fact]
+    public void StoreIndexedMemoryFromL_ReadsRealLNotIyl()
+    {
+        // LD IY,0x0010 ; LD L,0x99 ; LD (IY+2),L -- must read real L, not IYL.
+        var (cpu, mem) = NewCpu(0xFD, 0x21, 0x10, 0x00, 0x2E, 0x99, 0xFD, 0x75, 0x02);
+        Run(cpu, 3);
+        Assert.Equal(0x99, mem.Raw[0x12]);
+    }
+
+    [Fact]
+    public void BitOnIndexedMemory_TakesUndocumentedFlagsFromAddressHighByte()
+    {
+        // LD IX,0x2000 ; LD (IX+1),0 ; BIT 0,(IX+1) -- effective address is 0x2001, so
+        // X/Y flags must come from its high byte (0x20 -> Y set, X clear), not from the
+        // tested value (0, which would clear both).
+        var (cpu, _) = NewCpu(0xDD, 0x21, 0x00, 0x20, 0xDD, 0x36, 0x01, 0x00, 0xDD, 0xCB, 0x01, 0x46);
+        Run(cpu, 3);
+        Assert.True((cpu.F & Flags.Zero) != 0);
+        Assert.True((cpu.F & Flags.Y) != 0);  // bit 5 of 0x20 is set
+        Assert.False((cpu.F & Flags.X) != 0); // bit 3 of 0x20 is clear
+    }
+
+    [Fact]
     public void DdCb_RotateWritesBackToMemoryAndShadowRegister()
     {
         // LD IX,0x0020 ; LD (IX+0),0x01 ; RLC (IX+0) ; result also copied into B (undocumented)

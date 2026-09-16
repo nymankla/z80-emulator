@@ -45,14 +45,30 @@ and dumps the registers afterward; `A` ends up holding `0x37` (55).
 dotnet test
 ```
 
+### ZEXDOC / ZEXALL
+
+The CLI has a `cpm` mode — a minimal CP/M BDOS stub (just console output,
+functions 2 and 9) — specifically so it can host Frank Cringle's classic Z80
+instruction exerciser, the standard correctness benchmark for Z80 cores:
+
+```bash
+dotnet run -c Release --project src/Z80Emulator.Cli -- cpm tools/zexall/zexdoc.com   # documented flags
+dotnet run -c Release --project src/Z80Emulator.Cli -- cpm tools/zexall/zexall.com   # + undocumented X/Y flags
+```
+
+Both pass all 65 test cases (`tools/zexall/`, from
+[agn453/ZEXALL](https://github.com/agn453/ZEXALL), GPLv2, bundled here only as
+test input — not linked into `Z80Emulator.Core`/`Cli`). Each run executes
+~5.76 billion instructions and takes roughly a minute.
+
 ## Known limitations
 
 This targets a correct, well-organized *interpreter*, not cycle-accurate hardware emulation:
 
-- T-state counts are accurate for every documented instruction, but the few
-  genuinely obscure undocumented flag bits on the block I/O instructions
-  (`INI`/`IND`/`OUTI`/`OUTD` and their repeating forms) are simplified —
-  `S`/`Z` are correct, the rest are approximated.
+- ZEXDOC/ZEXALL don't exercise the block I/O instructions (`INI`/`IND`/`OUTI`/`OUTD`
+  and their repeating forms) at all, since CP/M doesn't define port behavior for
+  them. Their `S`/`Z` flags are correct; the remaining undocumented flag bits are
+  approximated rather than verified.
 - The one-instruction interrupt-acceptance delay after `EI` is not modeled
   (an interrupt raised immediately after `EI` is accepted before the next
   instruction executes, rather than after it).

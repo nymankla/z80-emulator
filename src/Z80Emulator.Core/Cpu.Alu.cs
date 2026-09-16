@@ -272,14 +272,19 @@ public sealed partial class Cpu
         return r;
     }
 
-    private void Bit(int bit, byte value)
+    /// <summary>
+    /// BIT b,r. <paramref name="xySource"/> supplies the undocumented X/Y flag bits:
+    /// for a plain register operand that's the tested value itself, but for a memory
+    /// operand real hardware takes it from the high byte of the effective address
+    /// (MEMPTR) instead — the caller resolves which applies.
+    /// </summary>
+    private void Bit(int bit, byte value, byte xySource)
     {
         bool set = (value & (1 << bit)) != 0;
         F = (byte)(F & Flags.Carry);
         F |= Flags.HalfCarry;
         if (!set) F |= Flags.Zero | Flags.ParityOverflow;
         if (bit == 7 && set) F |= Flags.Sign;
-        // Undocumented X/Y come from the tested value for (HL)-form BIT.
-        F |= Flags.XyBitsOf(value);
+        F |= Flags.XyBitsOf(xySource);
     }
 }

@@ -32,13 +32,16 @@ public sealed partial class Cpu
 
         if (mode == IndexMode.None)
         {
+            byte value = ReadR8(z, IndexMode.None);
+
             if (x == 1) // BIT y, r[z]
             {
-                Bit(y, ReadR8(z, IndexMode.None));
+                // (HL)'s X/Y flags come from the high byte of HL+1 (MEMPTR), not the value.
+                byte xySource = z == 6 ? (byte)((HL + 1) >> 8) : value;
+                Bit(y, value, xySource);
                 return z == 6 ? 8 : 4;
             }
 
-            byte value = ReadR8(z, IndexMode.None);
             byte result = x switch
             {
                 0 => ApplyRotateOrShift(y, value),
@@ -55,7 +58,8 @@ public sealed partial class Cpu
 
             if (x == 1) // BIT y, (IX/IY+d)
             {
-                Bit(y, value);
+                // X/Y flags come from the high byte of the effective address (MEMPTR).
+                Bit(y, value, (byte)(addr >> 8));
                 return 12;
             }
 
