@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Z80Emulator.Cli/Z80Emulator.Cli.csproj" />
+    <Project Path="src/Z80Emulator.Core/Z80Emulator.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Z80Emulator.Tests/Z80Emulator.Tests.csproj" />
+  </Folder>
+</Solution>
