@@ -39,6 +39,14 @@ dotnet run --project src/Z80Emulator.Cli -- samples/sum-1-to-10.bin
 This loads a hand-assembled program (`LD B,10 / LD A,0 / loop: ADD A,B / DEC B / JR NZ,loop / HALT`)
 and dumps the registers afterward; `A` ends up holding `0x37` (55).
 
+There are also two CP/M samples exercising the console-I/O BDOS stub (see below):
+`samples/readchar-echo.com` (functions 1/11) and `samples/readline-echo.com`
+(function 10, including backspace editing and max-length truncation):
+
+```bash
+echo hello | dotnet run --project src/Z80Emulator.Cli -- cpm samples/readline-echo.com
+```
+
 ## Tests
 
 ```bash
@@ -47,9 +55,12 @@ dotnet test
 
 ### ZEXDOC / ZEXALL
 
-The CLI has a `cpm` mode — a minimal CP/M BDOS stub (just console output,
-functions 2 and 9) — specifically so it can host Frank Cringle's classic Z80
-instruction exerciser, the standard correctness benchmark for Z80 cores:
+The CLI has a `cpm` mode — a minimal CP/M BDOS stub covering console I/O
+(functions 1, 2, 6, 9, 10, 11 — read/write a character, direct I/O, print a
+`$`-terminated string, buffered line input, and input status; everything
+else, notably disk/file I/O, is an unimplemented no-op) — specifically so it
+can host Frank Cringle's classic Z80 instruction exerciser, the standard
+correctness benchmark for Z80 cores:
 
 ```bash
 dotnet run -c Release --project src/Z80Emulator.Cli -- cpm tools/zexall/zexdoc.com   # documented flags
