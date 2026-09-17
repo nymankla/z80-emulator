@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Z80Emulator.Core\Z80Emulator.Core.csproj" />
+    <ProjectReference Include="..\..\src\Z80Emulator.Assembler\Z80Emulator.Assembler.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Z80Emulator.Assembler/Z80Emulator.Assembler.csproj" />
     <Project Path="src/Z80Emulator.Cli/Z80Emulator.Cli.csproj" />
     <Project Path="src/Z80Emulator.Core/Z80Emulator.Core.csproj" />
   </Folder>

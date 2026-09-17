@@ -10,9 +10,13 @@ modeled; this is the CPU core only.
 ## Layout
 
 - `src/Z80Emulator.Core` — the CPU core. Start at [`Cpu.cs`](src/Z80Emulator.Core/Cpu.cs).
-- `src/Z80Emulator.Cli` — a minimal runner: loads a flat binary at an address and executes it.
+- `src/Z80Emulator.Assembler` — a two-pass Z80 assembler (see below). Start at
+  [`Assembler.cs`](src/Z80Emulator.Assembler/Assembler.cs).
+- `src/Z80Emulator.Cli` — a minimal runner: assembles, or loads a flat binary/CP/M `.com`
+  file, and executes it.
 - `tests/Z80Emulator.Tests` — xUnit tests covering the ALU, flags, branching, indexed
-  addressing, CB/ED-prefixed instructions, block instructions, and interrupts.
+  addressing, CB/ED-prefixed instructions, block instructions, interrupts, and the
+  assembler's instruction encodings and directives.
 
 ## Using the core
 
@@ -29,6 +33,29 @@ while (!cpu.Halted)
 
 `Step()` also services a pending `RaiseInterrupt()` / `RaiseNmi()` at the start
 of the next instruction boundary, per IM0/IM1/IM2 semantics.
+
+## Assembling a CP/M program
+
+```bash
+dotnet run --project src/Z80Emulator.Cli -- asm samples/hello.asm samples/hello.com
+dotnet run --project src/Z80Emulator.Cli -- cpm samples/hello.com
+```
+
+The assembler covers the full documented instruction set — main, CB-, ED-, and
+DD/FD-prefixed (including the DD CB/FD CB "shadow register" form and the
+IXH/IXL/IYH/IYL half-registers) — plus `ORG`, `EQU`, `DB`/`DEFB` (numbers and
+`'strings'`/`"strings"`), `DW`/`DEFW`, `DS`/`DEFS`, and `END`. Labels may be
+referenced before they're defined (forward references); `EQU` may not — its
+value must already be known at the point it's defined. Numbers accept
+`123`, `0x7B`, `7Bh`, `01111011b`, and `'A'`/`173o`; `$` means "this line's
+address". There's no macro support.
+
+```csharp
+using Z80Emulator.Assembler;
+
+AssembleResult result = Assembler.Assemble(sourceText); // throws AssemblyException on error
+byte[] bytes = result.Bytes;                            // ready to write out or load into IMemory
+```
 
 ## Running the sample
 

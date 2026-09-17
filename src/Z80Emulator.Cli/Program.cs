@@ -13,6 +13,12 @@ if (args[0].Equals("cpm", StringComparison.OrdinalIgnoreCase))
     return RunCpm(args[1], budget);
 }
 
+if (args[0].Equals("asm", StringComparison.OrdinalIgnoreCase))
+{
+    if (args.Length < 3) { PrintUsage(); return 1; }
+    return RunAssemble(args[1], args[2]);
+}
+
 return RunRaw(args);
 
 static void PrintUsage()
@@ -27,6 +33,29 @@ static void PrintUsage()
     Console.WriteLine("      stub (console I/O only: functions 1, 2, 6, 9, 10, 11), for CP/M-hosted");
     Console.WriteLine("      test tools such as ZEXDOC/ZEXALL. Stops when the program warm-boots");
     Console.WriteLine("      (jumps to 0x0000) or after max-t-states (default 50,000,000,000).");
+    Console.WriteLine();
+    Console.WriteLine("  Z80Emulator.Cli asm <source.asm> <output.com>");
+    Console.WriteLine("      Assembles a Z80 source file (use 'ORG 0100h' for a CP/M .com program)");
+    Console.WriteLine("      and writes the assembled bytes to <output.com>, ready for 'cpm' mode.");
+}
+
+static int RunAssemble(string sourcePath, string outputPath)
+{
+    string source = File.ReadAllText(sourcePath);
+    Z80Emulator.Assembler.AssembleResult result;
+    try
+    {
+        result = Z80Emulator.Assembler.Assembler.Assemble(source);
+    }
+    catch (Z80Emulator.Assembler.AssemblyException ex)
+    {
+        Console.Error.WriteLine($"{sourcePath}: {ex.Message}");
+        return 1;
+    }
+
+    File.WriteAllBytes(outputPath, result.Bytes);
+    Console.WriteLine($"Assembled {result.Bytes.Length:N0} bytes, origin 0x{result.OriginAddress:X4}, {result.Symbols.Count} symbol(s) -> {outputPath}");
+    return 0;
 }
 
 static int RunRaw(string[] args)
@@ -154,6 +183,9 @@ static void HandleBdosCall(Cpu cpu, IMemory memory)
             }
         case 11: // C_STAT: 0xFF if a character is waiting, else 0x00
             cpu.A = ConsoleCharAvailable() ? (byte)0xFF : (byte)0x00;
+            break;
+        case >= 15 and <= 34: // F_OPEN..F_WRITERAND: disk/file functions; no filesystem is modeled, so always report failure
+            cpu.A = 0xFF;
             break;
         default:
             // Every other BDOS function is unused by ZEXDOC/ZEXALL; ignore it.

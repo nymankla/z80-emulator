@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Z80Emulator.Core\Z80Emulator.Core.csproj" />
+    <ProjectReference Include="..\Z80Emulator.Assembler\Z80Emulator.Assembler.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
